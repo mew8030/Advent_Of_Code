@@ -5,17 +5,25 @@ class Logger:
 
 
     def log_event(self, event):
-        print(f"{event} underway")
+        if True:
+            print(f"{event} ")
 
     def log_sequence(self, rotation, lorR, num):
         print(f"sequence {rotation} turning {lorR} about {num} times")
 
     def log_turn_dial_initialization(self, safe):
-        print(f"dial position is {safe.dial[safe.dial_pos]} turning to the {safe.get_turn_direction()}" + 
-        f" {safe.get_turn_cycles()} times")
+        if False:
+            print(f"dial position is {safe.dial[safe.dial_pos]} turning to the {safe.get_turn_direction()}" + 
+            f" {safe.get_turn_cycles()} times")
     
     def log_turn_dial_event(self, safe):
-        print(f"Click from {safe.dial[safe.dial_pos]} to {safe.tmp_dial[safe.dial_pos]}")
+        if False:
+            print(f"Click from {safe.dial[safe.dial_pos]} to {safe.tmp_dial[safe.dial_pos]}")
+
+    def log_turn_dial_completion(self, safe):
+        if True:
+            print(f"The dial is rotated {safe.get_turn_direction()}{safe.get_turn_cycles()} to point at " +
+            f"{safe.dial[safe.dial_pos]}")
     
     def log_dial_going_pass_limit(self, safe, turn):
         tmp = []

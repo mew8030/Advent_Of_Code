@@ -10,6 +10,7 @@ class Safe:
         self.__turn_direction = ""
         self.__turn_cycles = 0
         self.counter = 0
+        self.clue = 0
         print(f"safe created")
         print(f"creating Logger")
         from logger import Logger
@@ -51,7 +52,11 @@ class Safe:
         
         for sequence in combination.split('\n'):
             self.__sequence.append(sequence)
-        
+    def iterate_clue(self):
+        if self.dial[self.dial_pos] == 0:
+            self.clue += 1
+            self.__log.log_event(f"current clue is : {self.clue}")
+        return
     def unlock(self):
         for turn in self.__sequence:
             self.__turn_direction = turn[:1]
@@ -73,6 +78,9 @@ class Safe:
                 
                 self.dial = self.tmp_dial
                 self.tmp_dial = []
+            self.__log.log_turn_dial_completion(self)
+            self.iterate_clue()
+            
                     
                     
             
