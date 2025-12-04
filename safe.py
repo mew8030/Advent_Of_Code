@@ -1,7 +1,7 @@
 
 class Safe:
 
-    def __init__(self):
+    def __init__(self, file_path):
         print(f"creating safe")
         self.dial = []
         self.tmp_dial = []
@@ -9,6 +9,7 @@ class Safe:
         self.__sequence = []
         self.__turn_direction = ""
         self.__turn_cycles = 0
+        self.__file_path = file_path
         self.counter = 0
         self.clue = 0
         print(f"safe created")
@@ -41,14 +42,9 @@ class Safe:
 
     def get_combination(self):
         self.__log.log_event("Getting Location of file with combination")
-        while True:
-            file_path = input("Enter file path for combination: ")
-            try:
-                with open(file_path) as f:
-                    combination = f.read()
-                break
-            except FileNotFoundError:
-                print("File not found, try again")
+        with open(self.__file_path) as f:
+            combination = f.read()
+
         
         for sequence in combination.split('\n'):
             self.__sequence.append(sequence)

@@ -1,10 +1,18 @@
+from challenges import Challenges
 from safe import Safe
+"""
+    Challenge List:
+
+    1: Locked Safe
+    2: Invalid Ids
+
+"""
+
+
+
 def main():
-    try:
-        lock = Safe()
-        lock.unlock()
-    except Exception as e:
-        print(f"ERROR: {e}")
+    menu = Challenges(0)
+    menu.start()
 
 main()
 
