@@ -6,7 +6,7 @@ class Logger:
 
 
     def log_event(self, event):
-        if True:
+        if False:
             print(f"{event} ")
 
     def log_sequence(self, rotation, lorR, num):
