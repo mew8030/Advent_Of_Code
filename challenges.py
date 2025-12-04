@@ -1,5 +1,5 @@
 from safe import Safe
-
+from invalid_ids import Invalid_ids
 CONFIG_FILE = "config.txt"
 
 class Challenges:
@@ -78,4 +78,9 @@ class Challenges:
             print(f"ERROR: {e}")
 
     def invalid_ids(self):
-        pass
+        try:
+            path = self.get_input_path("day2_path")
+            identifiers = Invalid_ids(path)
+            identifiers.find_invalid_ids()
+        except Exception as e:
+            print(f"ERROR: {e}")
