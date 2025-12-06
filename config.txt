@@ -1,2 +1,3 @@
 day1_path=sequence.txt
 day2_path=invalid_ranges_official.txt
+day3_path=batteries.txt

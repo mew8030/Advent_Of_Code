@@ -1,5 +1,6 @@
 from safe import Safe
 from invalid_ids import Invalid_ids
+from power_banks import Power_Banks
 CONFIG_FILE = "config.txt"
 
 class Challenges:
@@ -7,7 +8,8 @@ class Challenges:
         self.__flags = flags
         self.__challenges = {
             1: ("Locked Safe", self.locked_safe),
-            2: ("Invalid IDs", self.invalid_ids)
+            2: ("Invalid IDs", self.invalid_ids),
+            3: ("Battery Banks", self.battery_banks)
         }
 
     def show_menu(self):
@@ -37,19 +39,8 @@ class Challenges:
                 self.run(choice)
             except ValueError:
                 print("Please enter a number")
-    
-    def load_config(self):
-        try:
-            with open(CONFIG_FILE, "r") as f:
-                config = {}
-                for line in f:
-                    key, value = line.strip().split("=")
-                    config[key] = value
-                return config
-        except FileNotFoundError:
-            return {}
 
-
+    #configuration for challenges
     def save_config(self, config):
         with open(CONFIG_FILE, "w") as f:
             for key, value in config.items():
@@ -68,7 +59,21 @@ class Challenges:
         config[key] = new_path
         self.save_config(config)
         return new_path
+    
+    #day 1 challenge
+    def load_config(self):
+        try:
+            with open(CONFIG_FILE, "r") as f:
+                config = {}
+                for line in f:
+                    key, value = line.strip().split("=")
+                    config[key] = value
+                return config
+        except FileNotFoundError:
+            print(f"file not found")
+            return {}
 
+    #day 2 challenge part 1
     def locked_safe(self):
         try:
             path = self.get_input_path("day1_path")
@@ -76,11 +81,21 @@ class Challenges:
             lock.unlock()
         except Exception as e:
             print(f"ERROR: {e}")
-
+    #day 2 challenge part 2 final
     def invalid_ids(self):
         try:
             path = self.get_input_path("day2_path")
             identifiers = Invalid_ids(path)
             identifiers.find_invalid_ids()
+        except Exception as e:
+            print(f"ERROR: {e}")
+
+    #day 3 challenge
+    def battery_banks(self):
+        try:
+            path = self.get_input_path("day3_path")
+            battery_pack = Power_Banks(path, 3)
+            battery_pack.get_batteries()
+            battery_pack.get_voltages()
         except Exception as e:
             print(f"ERROR: {e}")

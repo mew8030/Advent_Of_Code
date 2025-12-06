@@ -6,7 +6,7 @@ class Invalid_ids:
         self.__sum_invalid_ids = 0
         self.tmpstr = ""
         from logger import Logger
-        self.log = Logger()
+        self.log = Logger(False)
         self.get_ids()
 
     

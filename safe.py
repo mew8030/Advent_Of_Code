@@ -16,7 +16,7 @@ class Safe:
         print(f"creating Logger")
         from logger import Logger
         print(f"creating Logger")
-        self.__log = Logger()
+        self.__log = Logger(False)
         self.__log.log_event("Logger created")
         self.__log.log_event("Creating Dial")
         for num in range(0, 100):
