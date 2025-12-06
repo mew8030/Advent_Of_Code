@@ -94,7 +94,7 @@ class Challenges:
     def battery_banks(self):
         try:
             path = self.get_input_path("day3_path")
-            battery_pack = Power_Banks(path, 3)
+            battery_pack = Power_Banks(path, 2)
             battery_pack.get_batteries()
             battery_pack.get_voltages()
         except Exception as e:
