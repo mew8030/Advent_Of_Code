@@ -9,7 +9,7 @@ class Power_Banks:
         self.__voltages = []
         self.__digits = digits
         from logger import Logger
-        self.log = Logger(True)
+        self.log = Logger(False)
         self.log.log_event(f"log creation completed")
         self.init_power_readings()
     
@@ -18,7 +18,7 @@ class Power_Banks:
         self.__power_readings = []
         self.log.log_event(f"initializing power readings to 0")
         while len(self.__power_readings) < self.__digits:
-            self.__power_readings.append({LAYER + counter : 0})
+            self.__power_readings.append({counter : 0})
             counter += 1
         self.log.log_event(f"{self.__power_readings}")
         
@@ -36,9 +36,10 @@ class Power_Banks:
     def get_init_power_reading(self, pack_str_flipped):
         self.log.log_event(f"getting the initial power reading")
         for i in range(0, len(self.__power_readings)):
-            self.log.log_event(f"power reading from self.__power_reading is {self.__power_readings[i][LAYER + i]}")
-            self.log.log_event(f"and power reading from pack_str_flipped is {pack_str_flipped[i]}")
-            self.__power_readings[i][LAYER + i] =  pack_str_flipped[i]
+            self.log.log_event(f"index and layer will be the same in self.__power_readings[{i}][{i}]" + 
+            f" for layer {list(self.__power_readings[i].keys())[0]}" +
+            f" with a power reading of {pack_str_flipped[i]}")
+            self.__power_readings[i][i] =  pack_str_flipped[i]
         self.log.log_event(f"initial power reading is {self.__power_readings}")
 
     def iterate_through_pack(self, pack, start_pos, stop_pos):
@@ -55,13 +56,12 @@ class Power_Banks:
     def get_start_and_stop_pos(self, reading, key, value, pack):
         index1 = self.__power_readings.index(reading)
         index2 = len(self.__power_readings) - 1
-        self.log.log_event(f"checking start pos {index1} and stop pos {index2}")
+        self.log.log_event(f"checking index position in self.__power_readings: i1= {index1} i2= {index2}")
         if index1 < index2 and list(self.__power_readings[index1].keys())[0] + 1 < list(self.__power_readings[index1 + 1].keys())[0]:
-            self.log.log_event(f" along with their layers {list(self.__power_readings[index1].keys())[0]} and {list(self.__power_readings[index1 + 1].keys())[0]}")
-            self.log.log_event(f"this index: {index1} —is not the maximum index: {index2}")
+            self.log.log_event(f"this index: — {index1} — is behind — {index1 + 1} — with layers ranging from  {key} to {list(self.__power_readings[index1 + 1].keys())[0]}")
             return key, list(self.__power_readings[index1 + 1].keys())[0]
         elif index1 == index2:
-            self.log.log_event(f"this index: {index1} —is the last maximum index: {index2}")
+            self.log.log_event(f"this index: — {index1} — is the last maximum index: with layer {key} to the end of the pack which is layer {len(pack)}")
             return key, len(pack)
         else:
             return key, key
@@ -78,7 +78,7 @@ class Power_Banks:
     def update_power_readings(self, reading, layer, power):
         index = self.__power_readings.index(reading)
         key, value = list(reading.items())[0]
-        self.log.log_event(f"updating power reading[{index}] from {key}:{value} to {layer}:{power} ")
+        self.log.log_event(f"updating self.__power_readings index [{index}] from layer:power {key}:{value} to {layer}:{power} ")
         self.__power_readings[index][layer] = power
         if key != layer:
             self.__power_readings[index].pop(key)
@@ -90,14 +90,14 @@ class Power_Banks:
         for reading in reversed(self.__power_readings):
 
             key, value = list(reading.items())[0]
-            self.log.log_event(f"checking if layer {key} readings: {value} is less than or equal to any value in pack: {pack}" +
+            self.log.log_event(f"checking if layer {key} power of: {value} is <= any power in pack: {pack}" +
             f" between a specific range")
             layer, power = self.find_stronger_battery(reading, key, value, pack)
             if (int(power) > int(value)) or (int(power) == int(value) and int(layer) > int(key)):
                 self.log.log_event("yep")
                 self.update_power_readings(reading, layer, power)
 
-        self.log.log_event(f"checking if tmp_dict {tmp_dict} is the same as power readings {self.__power_readings}")
+        self.log.log_event(f"checking if tmp_dict readings {tmp_dict}\nis the same as power readings {self.__power_readings}")
         if tmp_dict != self.__power_readings:
             self.update_pack(pack)
         self.log.log_event(f"in pack: {pack} there were no greater powers than any of the power readings: {self.__power_readings}")
@@ -126,9 +126,10 @@ class Power_Banks:
 
     def get_voltages(self):
         for pack in self.__battery_packs:
-            pack_str_flipped = self.flip_pack(pack)
-            self.log.log_event(f"pack flipped is {pack_str_flipped}")
-            self.get_init_power_reading(pack_str_flipped)
-            self.get_official_power_reading(pack_str_flipped)
+            if len(pack) != 0:
+                pack_str_flipped = self.flip_pack(pack)
+                self.log.log_event(f"pack flipped is {pack_str_flipped}")
+                self.get_init_power_reading(pack_str_flipped)
+                self.get_official_power_reading(pack_str_flipped)
         self.log.log_event(f"Total volatage is {self.get_total_voltage()}")
         print(f"Total volatage is {self.get_total_voltage()}")

@@ -95,7 +95,7 @@ class Challenges:
         try:
             print("starting battery challenge")
             path = self.get_input_path("day3_path")
-            battery_pack = Power_Banks(path, 2)
+            battery_pack = Power_Banks(path, 12)
             print("battery pack creation competed")
             battery_pack.get_batteries()
             battery_pack.get_voltages()
