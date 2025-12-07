@@ -1,15 +1,27 @@
+import copy
+
+LAYER = 1
 class Power_Banks:
     def __init__(self, file_path, digits):
         self.__file_path = file_path
         self.__battery_packs = []
         self.__power_readings = []
-        self.tmp_val = -1
-        while len(self.__power_readings) < digits:
-            self.__power_readings.append(0)
         self.__voltages = []
+        self.__digits = digits
         from logger import Logger
         self.log = Logger(True)
+        self.log.log_event(f"log creation completed")
+        self.init_power_readings()
     
+    def init_power_readings(self):
+        counter = 0
+        self.__power_readings = []
+        self.log.log_event(f"initializing power readings to 0")
+        while len(self.__power_readings) < self.__digits:
+            self.__power_readings.append({LAYER + counter : 0})
+            counter += 1
+        self.log.log_event(f"{self.__power_readings}")
+        
     def get_batteries(self):
         self.log.log_event(f"obtaining battery_banks")
         with open(self.__file_path) as f:
@@ -24,80 +36,99 @@ class Power_Banks:
     def get_init_power_reading(self, pack_str_flipped):
         self.log.log_event(f"getting the initial power reading")
         for i in range(0, len(self.__power_readings)):
-            self.log.log_event(f"power reading from self.__power_reading is {self.__power_readings[i]}")
+            self.log.log_event(f"power reading from self.__power_reading is {self.__power_readings[i][LAYER + i]}")
             self.log.log_event(f"and power reading from pack_str_flipped is {pack_str_flipped[i]}")
-            self.__power_readings[i] = pack_str_flipped[i]
+            self.__power_readings[i][LAYER + i] =  pack_str_flipped[i]
         self.log.log_event(f"initial power reading is {self.__power_readings}")
 
-    def check_pack(self, check, pack):
-        self.log.log_event(f"checking if any readings are less than {pack[check]}")
-        for reading in self.__power_readings:
-            self.log.log_event(f"pack check[{check}]: {pack[check]} > power reading: {reading}")
-            if pack[check] > reading:
-                self.log.log_event("yep")
-                return True
- 
-        self.log.log_event(f"pack[check]: {pack[check]} was not greater than any of the power readings: {self.__power_readings}")
-        return False
-
-    def shove_readings(self, i, check, pack):
-        self.log.log_event(f"shoving over power reading index [{i}]")
-        if i + 1 < len(self.__power_readings):
-            self.shove_readings(i + 1, check, pack)
+    def iterate_through_pack(self, pack, start_pos, stop_pos):
+        self.log.log_event(f"iterating through battery pack")
+        strongest_battery = { -1: -1}
+        for i in range(start_pos, stop_pos):
+            if int(list(strongest_battery.values())[0]) <= int(pack[i]):
+                key = list(strongest_battery.keys())[0]
+                strongest_battery[i] = pack[i]
+                strongest_battery.pop(key)
+        self.log.log_event(f"strongest battery in index range {start_pos} and {stop_pos} is: {strongest_battery}")
+        return strongest_battery
+    
+    def get_start_and_stop_pos(self, reading, key, value, pack):
+        index1 = self.__power_readings.index(reading)
+        index2 = len(self.__power_readings) - 1
+        self.log.log_event(f"checking start pos {index1} and stop pos {index2}")
+        if index1 < index2 and list(self.__power_readings[index1].keys())[0] + 1 < list(self.__power_readings[index1 + 1].keys())[0]:
+            self.log.log_event(f" along with their layers {list(self.__power_readings[index1].keys())[0]} and {list(self.__power_readings[index1 + 1].keys())[0]}")
+            self.log.log_event(f"this index: {index1} —is not the maximum index: {index2}")
+            return key, list(self.__power_readings[index1 + 1].keys())[0]
+        elif index1 == index2:
+            self.log.log_event(f"this index: {index1} —is the last maximum index: {index2}")
+            return key, len(pack)
         else:
-            self.log.log_event(f"power reading[{i}] is being shoved to pack[{check}]: {self.__power_readings[i]} -- {pack[check]}")
-            self.tmp_val = self.__power_readings[i]
-            self.__power_readings[i] = pack[check]
-            
-        itlen = i
-        for j in range(i-1, -1, -1):
-            if self.tmp_val != -1 and self.__power_readings[j] < self.tmp_val:
-                self.log.log_event(f"index j {j} is {self.__power_readings[j]} and one index up {i - (itlen - (j + 1))} is" +
-                f" {self.tmp_val} using tmp_val")
-                tmp = self.__power_readings[j]
-                self.__power_readings[j] = self.tmp_val
-                self.tmp_val = tmp
-        self.log.log_event(f"here are the power readings currently { self.__power_readings}")
+            return key, key
 
-    def clense(self):
-        self.tmp_val = -1
 
-    def adapt_power_readings(self, check, pack):
-        i = 0
-        self.log.log_event(f"adapting power reading")
+    def find_stronger_battery(self, reading, key, value, pack):
+        strongest_battery = {}
+        self.log.log_event(f"locating the strongest battery in pack {pack}")
+        start_pos, stop_pos = self.get_start_and_stop_pos(reading, key, value, pack)
+        strongest_battery = self.iterate_through_pack(pack, start_pos, stop_pos)
+        self.log.log_event(f"the strongest battery found was {strongest_battery}")
+        return list(strongest_battery.items())[0]
 
-        """        
-            for i in range(0, len(self.__power_readings)):
-            if self.__power_readings[i] < pack[check]:
-            if i + 1 < len(self.__power_readings):
-        """
-        self.shove_readings(i + 1, check, pack)
-        self.clense()
+    def update_power_readings(self, reading, layer, power):
+        index = self.__power_readings.index(reading)
+        key, value = list(reading.items())[0]
+        self.log.log_event(f"updating power reading[{index}] from {key}:{value} to {layer}:{power} ")
+        self.__power_readings[index][layer] = power
+        if key != layer:
+            self.__power_readings[index].pop(key)
 
-    def confirm_power_reading(self):
-        self.__voltages.append(int("".join(str(num) for num in self.__power_readings)))
-        self.log.log_event(f"Confirming all current power readings { self.__voltages }")
+    def update_pack(self, pack):
+        self.log.log_event(f"updating the current pack {pack} for power readings {self.__power_readings}")
+        tmp_dict = []
+        tmp_dict = copy.deepcopy(self.__power_readings)
+        for reading in reversed(self.__power_readings):
+
+            key, value = list(reading.items())[0]
+            self.log.log_event(f"checking if layer {key} readings: {value} is less than or equal to any value in pack: {pack}" +
+            f" between a specific range")
+            layer, power = self.find_stronger_battery(reading, key, value, pack)
+            if (int(power) > int(value)) or (int(power) == int(value) and int(layer) > int(key)):
+                self.log.log_event("yep")
+                self.update_power_readings(reading, layer, power)
+
+        self.log.log_event(f"checking if tmp_dict {tmp_dict} is the same as power readings {self.__power_readings}")
+        if tmp_dict != self.__power_readings:
+            self.update_pack(pack)
+        self.log.log_event(f"in pack: {pack} there were no greater powers than any of the power readings: {self.__power_readings}")
+
+    def save_voltage(self):
+        self.log.log_event(f"saving voltage from power reading{self.__power_readings}")
+        tmp = []
+        for reading in reversed(self.__power_readings):
+            layer,power = list(reading.items())[0]
+            tmp.append(power)
+            volts = int("".join(x for x in tmp))
+        self.log.log_event(f"saving current voltage {volts}")
+        self.__voltages.append(volts)
+        self.init_power_readings()
 
     def get_official_power_reading(self, pack):
         self.log.log_event(f"getting official power readings")
-        check = len(self.__power_readings)
-        while check < len(pack):
-            if self.check_pack(check, pack):
-                self.adapt_power_readings(check, pack)
-            check += 1
-
-        self.confirm_power_reading()
+        self.update_pack(pack)
+        self.save_voltage()
     
     def get_total_voltage(self):
-        sum = 0
+        total_volts = 0
         for volts in self.__voltages:
-            sum += volts
-        return sum
+            total_volts += volts
+        return total_volts
 
     def get_voltages(self):
         for pack in self.__battery_packs:
             pack_str_flipped = self.flip_pack(pack)
             self.log.log_event(f"pack flipped is {pack_str_flipped}")
             self.get_init_power_reading(pack_str_flipped)
-            self.get_official_power_reading(pack_str_flipped)            
+            self.get_official_power_reading(pack_str_flipped)
         self.log.log_event(f"Total volatage is {self.get_total_voltage()}")
+        print(f"Total volatage is {self.get_total_voltage()}")

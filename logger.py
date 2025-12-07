@@ -4,6 +4,7 @@ class Logger:
     def __init__(self, debug=False):
         print(f"initializing Logger")
         self.__debug = debug
+        print(F"logger initialization completed")
 
 
     def log_event(self, event):

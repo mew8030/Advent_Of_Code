@@ -93,8 +93,10 @@ class Challenges:
     #day 3 challenge
     def battery_banks(self):
         try:
+            print("starting battery challenge")
             path = self.get_input_path("day3_path")
             battery_pack = Power_Banks(path, 2)
+            print("battery pack creation competed")
             battery_pack.get_batteries()
             battery_pack.get_voltages()
         except Exception as e:
