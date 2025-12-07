@@ -1,6 +1,7 @@
 from safe import Safe
 from invalid_ids import Invalid_ids
 from power_banks import Power_Banks
+from paper_rolls import Paper_Rolls
 CONFIG_FILE = "config.txt"
 
 class Challenges:
@@ -9,7 +10,8 @@ class Challenges:
         self.__challenges = {
             1: ("Locked Safe", self.locked_safe),
             2: ("Invalid IDs", self.invalid_ids),
-            3: ("Battery Banks", self.battery_banks)
+            3: ("Battery Banks", self.battery_banks),
+            4: ("Paper Problems", self.move_paper_rolls)
         }
 
     def show_menu(self):
@@ -99,5 +101,16 @@ class Challenges:
             print("battery pack creation competed")
             battery_pack.get_batteries()
             battery_pack.get_voltages()
+        except Exception as e:
+            print(f"ERROR: {e}")
+
+    #day 4 challenge
+    def move_paper_rolls(self):
+        try:
+            print("checking access to paper rolls for efficient organizing process")
+            path = self.get_input_path("day4_path")
+            forklift = Paper_Rolls(path)
+            print("Initiating use of forklift")
+            forklift.analyze_workspace()
         except Exception as e:
             print(f"ERROR: {e}")

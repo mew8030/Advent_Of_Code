@@ -10,6 +10,10 @@ class Logger:
     def log_event(self, event):
         if self.__debug:
             print(f"{event} ")
+    
+    def log_debug(self, num, event):
+        if num != 0:
+            print(f"{event}")
 
     def log_sequence(self, rotation, lorR, num):
         print(f"sequence {rotation} turning {lorR} about {num} times")
