@@ -112,5 +112,6 @@ class Challenges:
             forklift = Paper_Rolls(path)
             print("Initiating use of forklift")
             forklift.analyze_workspace()
+            forklift.find_paper_rolls()
         except Exception as e:
             print(f"ERROR: {e}")
