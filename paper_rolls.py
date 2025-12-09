@@ -3,14 +3,15 @@ class Paper_Rolls:
     
     def __init__(self, file_path):
         self.__file_path = file_path
-        self.paper_rows, self.paper_cols = 0, 0 #number of rows and cols in workspace
-        self.fl = '\u235f'                      #⍟ forklift marker
-        self.obj_in_space = ''
-        self.flr, self.flc = 0, 1
-        self.fl_pos = [self.flr,0]                     #⍟ forklift position
-        self.ws = []                            #workspace rows
-        self.top_to_bottom = True
-        self.fl_reach = [
+        self.paper_rows, self.paper_cols = 0, 0         #number of rows and cols in workspace
+        self.fl = '\u235f'                              #⍟ forklift marker
+        self.obj_in_space = ''                          #acts as currently held object with '' signifyin nothing is held
+        self.flr, self.flc = 0, 1                       #workspace x and y coordinates
+        self.fl_pos = [self.flr,0]                      #⍟ forklift position
+        self.ws = []                                    #workspace rows
+        self.saved_ws_spots = []                        #workspace spots that were marked will be saved in this list
+        self.top_to_bottom = True                       #flag to signal if the bottom of the workspace is reached
+        self.fl_reach = [                               #adjacent spots to check relative to the forklift position
             (-1, -1),
             (-1, 0),
             (-1, 1),
@@ -21,11 +22,12 @@ class Paper_Rolls:
             (1, 1)
             
         ]
-        self.workable_spots = 0
-        from logger import Logger
-        self.log = Logger(False)                 #log for debugging
+        self.workable_spots = 0                         #the number of paper rolls considered efficient to be moved
+        self.total_workable_spots = 0                   #the number total rolls moved in workspace after n iterations
+        from logger import Logger                       #The logger to log all statements when debugging
+        self.log = Logger(False)                         #log for debugging
 
-    def analyze_workspace(self):                #analyzing workspace
+    def analyze_workspace(self):                        #analyzing workspace
         self.log.log_event("""
                 analyzing workspace for forklift to access paper rolls 
                 with fewer than 4 adjacent paper rolls in the 8 adjacent
@@ -84,14 +86,19 @@ class Paper_Rolls:
         return self.fl_pos[self.flr]
 
     #puts down the currently held obj which should be either '.', '@', or 'X'
-    def put_putdown_obj(self):
+    def put_down_obj(self):
         self.log.log_event(f"putting down obj {self.obj_in_space}")
         self.ws[self.get_fly()][self.get_flx()] = self.obj_in_space
         self.obj_in_space = ''
     
     #assigns the parameter marker to the space in the workstation where the forklift is current positioned
-    def set_ws_obj_pos(self, marker):
-        self.ws[self.get_fly()][self.get_flx()] = marker
+    def set_ws_obj_pos(self, marker, x = None, y = None):
+        if x == None and y == None:
+            x = self.get_fly()
+            y = self.get_flx()
+            self.ws[x][y] = marker
+        else:
+            self.ws[y][x] = marker
 
     #returns the object in the workspace at the current position of the forklift
     def get_ws_obj_pos(self, x = None, y = None):
@@ -145,7 +152,7 @@ class Paper_Rolls:
 
     #swaps the position of the fl and the object in place
     def move_fl_to(self, x, y):
-        self.put_putdown_obj()
+        self.put_down_obj()
         self.move_fl(x, y)
         self.pick_up_obj()
 
@@ -158,13 +165,18 @@ class Paper_Rolls:
         if self.obj_in_space == '@':
             self.log.log_debug(1, f"found paper in ({self.get_flx()}, {self.get_fly()})")
             return True
-        self.log.log_debug(1, f"there is no papwer in ({self.get_flx()}, {self.get_fly()})")
+        self.log.log_debug(1, f"there is no paper in ({self.get_flx()}, {self.get_fly()})")
         return False
+
+    def save_ws_marked_spot(self):
+        self.saved_ws_spots.append((self.get_flx(), self.get_fly()))
+
 
     def mark_ws_spot_for_work(self):
         self.log.log_debug(1, f"this paper in position ({self.get_flx()}, {self.get_fly()}) is workable, marking paper for work")
-        self.put_putdown_obj()
+        self.put_down_obj()
         self.set_ws_obj_pos('X')
+        self.save_ws_marked_spot()
         self.workable_spots += 1
         self.pick_up_obj()
 
@@ -175,12 +187,12 @@ class Paper_Rolls:
             x = self.get_flx() + xx
             y = self.get_fly() + yy
             if not (x in range(0, self.paper_cols) and y in range(0, self.paper_rows)):
-                self.log.log_debug(1, f"({x}, {y}) are not in workspace range")
+                self.log.log_debug(0, f"({x}, {y}) are not in workspace range")
                 continue
             ws_obj = self.get_ws_obj_pos(x, y)
             if ws_obj == '@' or ws_obj == 'X':
                 neighbors += 1
-            self.log.log_debug(1, f"neighboring object is {ws_obj}  at ({x}, {y}) totaling to {neighbors} neighbor(s)")
+            self.log.log_debug(0, f"neighboring object is {ws_obj}  at ({x}, {y}) totaling to {neighbors} neighbor(s)")
             if neighbors > 3:
                 self.log.log_event(f"workspace position ({self.get_flx()}, {self.get_fly()}), has too many neighbors")
                 return False
@@ -198,7 +210,7 @@ class Paper_Rolls:
     #drive the forklift from one end to the other
     def drive_to_other_side(self, wall, dir):
         while self.get_flx() != wall:
-            self.put_putdown_obj()
+            self.put_down_obj()
             self.it_flx(dir)
             self.pick_up_obj()
             self.check_space_for_paper()
@@ -211,7 +223,7 @@ class Paper_Rolls:
             self.log.log_debug(1, f"forklift is at the bottom of the workplace and cannot move any further")
             self.top_to_bottom = False
             return None
-        self.put_putdown_obj()
+        self.put_down_obj()
         tmp = f"moving down the workspace from ({self.get_flx()}, {self.get_fly()})"
         self.fl_pos[self.flr] += 1
         self.log.log_event(f"{tmp} to ({self.get_flx()}, {self.get_fly()})")
@@ -233,9 +245,9 @@ class Paper_Rolls:
             self.move_fl_down()
             if self.top_to_bottom == False:
                 self.log.log_event(f"Finished optimizing work space for all paper rolls that are workable"+
-                f"\ntotal amount of workable paper rolls is {self.workable_spots}")
+                f"\nthe amount of workable paper rolls is {self.workable_spots}")
                 print(f"Finished optimizing work space for all paper rolls that are workable"+
-                f"\ntotal amount of workable paper rolls is {self.workable_spots}")
+                f"\nthe amount of workable paper rolls is {self.workable_spots}")
                 break
             if i >= max_it:
                 self.log.log_debug(1, f"maximum amount of iterations reached, closing challenge")
@@ -252,5 +264,30 @@ class Paper_Rolls:
         self.check_space_for_paper()
         self.drive_through_all_rows()
 
+    #clears the marked spots that have been worked in the workspace with '.'
+    def clear_worked_spots(self):
+        self.log.log_event(f"clearing the workspace")
+        if self.obj_in_space == 'X':
+            self.obj_in_space = '.'
+        for spot in self.saved_ws_spots:
+            self.set_ws_obj_pos('.', spot[0], spot[1])
+        self.saved_ws_spots = []
+        self.log.log_event(f"workspace in now clear of worked areas")
+        self.show_workspace()
+
+
     def find_paper_rolls(self): #iterates through the workspace to find paper rolls
         self.iterate_fl()
+        it = 0
+        while(self.workable_spots != 0):
+            self.total_workable_spots += self.workable_spots
+            it += 1 
+            print(f"the current total of workable paper rolls is {self.total_workable_spots} after {it} iterations")
+            self.clear_worked_spots()
+            self.workable_spots = 0
+            self.move_fl_to(0,0)
+            self.show_workspace()
+            self.top_to_bottom = True
+            self.iterate_fl()
+        print(f"the current total of workable paper rolls is {self.total_workable_spots} after {it} iterations")
+
