@@ -9,8 +9,21 @@ class Paper_Rolls:
         self.flr, self.flc = 0, 1
         self.fl_pos = [self.flr,0]                     #⍟ forklift position
         self.ws = []                            #workspace rows
+        self.top_to_bottom = True
+        self.fl_reach = [
+            (-1, -1),
+            (-1, 0),
+            (-1, 1),
+            (0, 1),
+            (0, -1),
+            (1, -1),
+            (1, 0),
+            (1, 1)
+            
+        ]
+        self.workable_spots = 0
         from logger import Logger
-        self.log = Logger(True)                 #log for debugging
+        self.log = Logger(False)                 #log for debugging
 
     def analyze_workspace(self):                #analyzing workspace
         self.log.log_event("""
@@ -52,6 +65,7 @@ class Paper_Rolls:
         self.obj_in_space = self.ws[self.fl_pos[self.flr]][self.fl_pos[self.flc]]
         self.ws[self.fl_pos[self.flr]][self.fl_pos[self.flc]] = self.fl
 
+    #displays the workspace to work in
     def show_workspace(self):
         tmp = ""
         for i in range(0, self.paper_cols):
@@ -80,8 +94,16 @@ class Paper_Rolls:
         self.ws[self.get_fly()][self.get_flx()] = marker
 
     #returns the object in the workspace at the current position of the forklift
-    def get_ws_obj_pos(self):
-        return self.ws[self.get_fly()][self.get_flx()]
+    def get_ws_obj_pos(self, x = None, y = None):
+        ws_obj = ''
+        if x == None and y == None:
+            x = self.get_fly()
+            y = self.get_flx()
+            ws_obj = self.ws[x][y]
+        else:
+            ws_obj = self.ws[y][x]
+        self.log.log_debug(1, f"objecte in forklift position is ({ws_obj})")
+        return ws_obj
 
     #picks up the object in the current forklift position marks that area with the forklift marker
     def pick_up_obj(self):
@@ -101,6 +123,7 @@ class Paper_Rolls:
         self.log.log_event(f"moving to nearest wall ({posx}, {posy})")
         return posx, posy
 
+    #get the farthest wall from the forklift's position
     def get_opposite_wall_pos(self):
         posx, posy = 0, 0
         ws_center = (self.paper_cols - 1) // 2
@@ -137,11 +160,40 @@ class Paper_Rolls:
             return True
         self.log.log_debug(1, f"there is no papwer in ({self.get_flx()}, {self.get_fly()})")
         return False
+
+    def mark_ws_spot_for_work(self):
+        self.log.log_debug(1, f"this paper in position ({self.get_flx()}, {self.get_fly()}) is workable, marking paper for work")
+        self.put_putdown_obj()
+        self.set_ws_obj_pos('X')
+        self.workable_spots += 1
+        self.pick_up_obj()
+
+    def how_many_paper_neighbors(self):
+        neighbors = 0
+        self.log.log_event(f"checking neighboring paper rolls from ({self.get_flx()}, {self.get_fly()})")
+        for xx, yy in self.fl_reach:
+            x = self.get_flx() + xx
+            y = self.get_fly() + yy
+            if not (x in range(0, self.paper_cols) and y in range(0, self.paper_rows)):
+                self.log.log_debug(1, f"({x}, {y}) are not in workspace range")
+                continue
+            ws_obj = self.get_ws_obj_pos(x, y)
+            if ws_obj == '@' or ws_obj == 'X':
+                neighbors += 1
+            self.log.log_debug(1, f"neighboring object is {ws_obj}  at ({x}, {y}) totaling to {neighbors} neighbor(s)")
+            if neighbors > 3:
+                self.log.log_event(f"workspace position ({self.get_flx()}, {self.get_fly()}), has too many neighbors")
+                return False
+        return True
+
+
     #checks current spot for paper, assume that object is picked up here
     def check_space_for_paper(self):
         if self.is_obj_paper():
             #check adjacent areas for paper and sum the amount of paper around obj
-            return
+            if self.how_many_paper_neighbors():
+                self.mark_ws_spot_for_work()
+
 
     #drive the forklift from one end to the other
     def drive_to_other_side(self, wall, dir):
@@ -149,11 +201,16 @@ class Paper_Rolls:
             self.put_putdown_obj()
             self.it_flx(dir)
             self.pick_up_obj()
+            self.check_space_for_paper()
             self.show_workspace()
         self.log.log_debug(1, f"balls to the wall with the forklift at ({self.get_flx()}, {self.get_fly()})")
 
     #moves the forklift down the workspace
     def move_fl_down(self):
+        if self.get_fly() + 1 >= self.paper_rows:
+            self.log.log_debug(1, f"forklift is at the bottom of the workplace and cannot move any further")
+            self.top_to_bottom = False
+            return None
         self.put_putdown_obj()
         tmp = f"moving down the workspace from ({self.get_flx()}, {self.get_fly()})"
         self.fl_pos[self.flr] += 1
@@ -162,17 +219,27 @@ class Paper_Rolls:
         self.show_workspace()
         self.check_space_for_paper()
 
+    
+    #drives the forklift across and down the workspace
     def drive_through_all_rows(self):
         self.log.log_event(f"Driving through all rows in workspace with the forklift")
         wall = (0, 0, 1)
-        max_it = 100
+        max_it = 1000
         i = 0
-        while self.get_fly() != self.paper_rows - 1:
+        while self.get_fly() != self.paper_rows:
             wall = self.get_opposite_wall_pos()
             self.log.log_debug(0, f"the desired location is ({wall[0], wall[1]} with direction {wall[2]})")
             self.drive_to_other_side(wall[0], wall[2])
             self.move_fl_down()
+            if self.top_to_bottom == False:
+                self.log.log_event(f"Finished optimizing work space for all paper rolls that are workable"+
+                f"\ntotal amount of workable paper rolls is {self.workable_spots}")
+                print(f"Finished optimizing work space for all paper rolls that are workable"+
+                f"\ntotal amount of workable paper rolls is {self.workable_spots}")
+                break
             if i >= max_it:
+                self.log.log_debug(1, f"maximum amount of iterations reached, closing challenge")
+                print(1, f"maximum amount of iterations reached, closing challenge")
                 break
             i += 1
             

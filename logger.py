@@ -12,7 +12,7 @@ class Logger:
             print(f"{event} ")
     
     def log_debug(self, num, event):
-        if num != 0:
+        if num != 0 and self.__debug:
             print(f"{event}")
 
     def log_sequence(self, rotation, lorR, num):

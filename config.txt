@@ -1,4 +1,4 @@
 day1_path=sequence.txt
 day2_path=invalid_ranges_official.txt
 day3_path=batteries_official.txt
-day4_path=workspace.txt
+day4_path=workspace_official.txt
