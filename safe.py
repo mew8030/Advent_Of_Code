@@ -16,15 +16,15 @@ class Safe:
         print(f"creating Logger")
         from logger import Logger
         print(f"creating Logger")
-        self.__log = Logger(False)
-        self.__log.log_event("Logger created")
-        self.__log.log_event("Creating Dial")
+        self.log = Logger(True)
+        self.log.log_event("Logger created")
+        self.log.log_event("Creating Dial")
         for num in range(0, 100):
             self.dial.append(num)
-        self.__log.log_event("Dial Created")
-        self.__log.log_event("Getting Combination")
+        self.log.log_event("Dial Created")
+        self.log.log_event("Getting Combination")
         self.get_combination()
-        self.__log.log_event("Combination found")
+        self.log.log_event("Combination found")
 
             
 
@@ -41,7 +41,7 @@ class Safe:
         return "Left"
 
     def get_combination(self):
-        self.__log.log_event("Getting Location of file with combination")
+        self.log.log_event("Getting Location of file with combination")
         with open(self.__file_path) as f:
             combination = f.read()
 
@@ -51,14 +51,16 @@ class Safe:
     def iterate_clue(self):
         if self.dial[self.dial_pos] == 0:
             self.clue += 1
-            self.__log.log_event(f"current clue is : {self.clue}")
+            self.log.log_event(f"current clue is : {self.clue}")
         return
+
     def unlock(self):
         for turn in self.__sequence:
             self.__turn_direction = turn[:1]
             self.__turn_cycles = int(turn[1:])
             self.counter = self.__turn_cycles
-            self.__log.log_turn_dial_initialization(self)
+            self.log.log_debug(1, f"dial position is {self.dial[self.dial_pos]} turning to the {self.get_turn_direction()}" + 
+            f" {self.get_turn_cycles()} times")
             while(self.counter):
                 self.counter -= 1
                 if self.__turn_direction == 'R':
@@ -67,15 +69,21 @@ class Safe:
                 else:
                     self.tmp_dial = self.dial[-1:]
                     self.tmp_dial += self.dial[:-1]
-                self.__log.log_turn_dial_event(self)
+                self.log.log_debug(0, f"Click from {self.dial[self.dial_pos]} to {self.tmp_dial[self.dial_pos]}")
                 
-                #self.__log.log_event(f"tmp_dial at 0 is {self.tmp_dial[0]} and tmp_dial at {self.dial_pos} is" +
-                #f" {self.tmp_dial[self.dial_pos]}")
-                
+                self.log.log_debug(0, f"tmp_dial at 0 is {self.tmp_dial[0]} and tmp_dial at {self.dial_pos} is" +
+                    f" {self.tmp_dial[self.dial_pos]}")
+
+                if int(self.tmp_dial[self.dial_pos]) == 0:
+                    self.clue += 1
+                    self.log.log_debug(1, f"tmp_dial[50] = {self.tmp_dial[self.dial_pos]} total clue = {self.clue}")
                 self.dial = self.tmp_dial
                 self.tmp_dial = []
-            self.__log.log_turn_dial_completion(self)
-            self.iterate_clue()
+            self.log.log_turn_dial_completion(self)
+
+    
+    def get_clues(self):
+        return self.clue
             
                     
                     

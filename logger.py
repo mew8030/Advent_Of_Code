@@ -23,10 +23,6 @@ class Logger:
             print(f"dial position is {safe.dial[safe.dial_pos]} turning to the {safe.get_turn_direction()}" + 
             f" {safe.get_turn_cycles()} times")
     
-    def log_turn_dial_event(self, safe):
-        if self.__debug:
-            print(f"Click from {safe.dial[safe.dial_pos]} to {safe.tmp_dial[safe.dial_pos]}")
-
     def log_turn_dial_completion(self, safe):
         if self.__debug:
             print(f"The dial is rotated {safe.get_turn_direction()}{safe.get_turn_cycles()} to point at " +

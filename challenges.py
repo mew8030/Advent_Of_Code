@@ -83,6 +83,7 @@ class Challenges:
             path = self.get_input_path("day1_path")
             lock = Safe(path)
             lock.unlock()
+            print(f"the clue number is {lock.get_clues()}")
         except Exception as e:
             print(f"ERROR: {e}")
     #day 2 challenge part 2 final
@@ -125,5 +126,6 @@ class Challenges:
             food_storage = Ingredient_Inventory(path)
             food_storage.sort_the_spoils()
             print(f"there are {food_storage.how_many_fresh_ingredients_in_database()} fresh ingredients in storage")
+            print(f"out of {food_storage.get_possible_fresh_ids()} possible fresh ids")
         except Exception as e:
             print(f"ERROR: {e}")
