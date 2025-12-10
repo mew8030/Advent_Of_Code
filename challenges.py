@@ -2,6 +2,7 @@ from safe import Safe
 from invalid_ids import Invalid_ids
 from power_banks import Power_Banks
 from paper_rolls import Paper_Rolls
+from ingredient_inventory import Ingredient_Inventory
 CONFIG_FILE = "config.txt"
 
 class Challenges:
@@ -11,7 +12,8 @@ class Challenges:
             1: ("Locked Safe", self.locked_safe),
             2: ("Invalid IDs", self.invalid_ids),
             3: ("Battery Banks", self.battery_banks),
-            4: ("Paper Problems", self.move_paper_rolls)
+            4: ("Paper Problems", self.move_paper_rolls),
+            5: ("Spoilers", self.freshen_up_inventory)
         }
 
     def show_menu(self):
@@ -113,5 +115,15 @@ class Challenges:
             print("Initiating use of forklift")
             forklift.analyze_workspace()
             forklift.find_paper_rolls()
+        except Exception as e:
+            print(f"ERROR: {e}")
+
+    def freshen_up_inventory(self):
+        try:
+            print("sorting out the trash")
+            path = self.get_input_path("day5_path")
+            food_storage = Ingredient_Inventory(path)
+            food_storage.sort_the_spoils()
+            print(f"there are {food_storage.how_many_fresh_ingredients_in_database()} fresh ingredients in storage")
         except Exception as e:
             print(f"ERROR: {e}")
