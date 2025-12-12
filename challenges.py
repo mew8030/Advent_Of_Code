@@ -3,6 +3,7 @@ from invalid_ids import Invalid_ids
 from power_banks import Power_Banks
 from paper_rolls import Paper_Rolls
 from ingredient_inventory import Ingredient_Inventory
+from homework import Homework
 CONFIG_FILE = "config.txt"
 
 class Challenges:
@@ -13,7 +14,8 @@ class Challenges:
             2: ("Invalid IDs", self.invalid_ids),
             3: ("Battery Banks", self.battery_banks),
             4: ("Paper Problems", self.move_paper_rolls),
-            5: ("Spoilers", self.freshen_up_inventory)
+            5: ("Spoilers", self.freshen_up_inventory),
+            6: ("Tutoring", self.complete_homework)
         }
 
     def show_menu(self):
@@ -129,3 +131,11 @@ class Challenges:
             print(f"out of {food_storage.get_possible_fresh_ids()} possible fresh ids")
         except Exception as e:
             print(f"ERROR: {e}")
+
+    def complete_homework(self):
+        print("completing math homework")
+        path = self.get_input_path("day6_path")
+        math_homework = Homework(path)
+        math_homework.analyze_hw()
+        math_homework.setup_questions_and_answers()
+        print(f"the grand total for the homework is {math_homework.get_grand_total()}")

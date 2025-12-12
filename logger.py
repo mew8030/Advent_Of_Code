@@ -18,11 +18,6 @@ class Logger:
     def log_sequence(self, rotation, lorR, num):
         print(f"sequence {rotation} turning {lorR} about {num} times")
 
-    def log_turn_dial_initialization(self, safe):
-        if self.__debug:
-            print(f"dial position is {safe.dial[safe.dial_pos]} turning to the {safe.get_turn_direction()}" + 
-            f" {safe.get_turn_cycles()} times")
-    
     def log_turn_dial_completion(self, safe):
         if self.__debug:
             print(f"The dial is rotated {safe.get_turn_direction()}{safe.get_turn_cycles()} to point at " +
