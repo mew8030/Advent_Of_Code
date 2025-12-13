@@ -4,3 +4,4 @@ day3_path=batteries_official.txt
 day4_path=workspace_official.txt
 day5_path=database_official.txt
 day6_path=hw_official.txt
+day7_path=schematics_official.txt

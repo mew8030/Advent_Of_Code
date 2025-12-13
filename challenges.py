@@ -4,6 +4,8 @@ from power_banks import Power_Banks
 from paper_rolls import Paper_Rolls
 from ingredient_inventory import Ingredient_Inventory
 from homework import Homework
+from teleporter import Teleporter
+
 CONFIG_FILE = "config.txt"
 
 class Challenges:
@@ -15,7 +17,8 @@ class Challenges:
             3: ("Battery Banks", self.battery_banks),
             4: ("Paper Problems", self.move_paper_rolls),
             5: ("Spoilers", self.freshen_up_inventory),
-            6: ("Tutoring", self.complete_homework)
+            6: ("Tutoring", self.complete_homework),
+            7: ("Teleporter Schematics", self.study_manifolds)
         }
 
     def show_menu(self):
@@ -139,3 +142,11 @@ class Challenges:
         math_homework.analyze_hw()
         math_homework.setup_questions_and_answers()
         print(f"the grand total for the homework is {math_homework.get_grand_total()}")
+
+    def study_manifolds(self):
+        print("study teleporter tychyon manifolds")
+        path = self.get_input_path("day7_path")
+        schematics = Teleporter(path)
+        schematics.analyze_manifold()
+        schematics.create_beam()
+        schematics.letting_beam_drop()
