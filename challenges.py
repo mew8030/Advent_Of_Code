@@ -5,6 +5,7 @@ from paper_rolls import Paper_Rolls
 from ingredient_inventory import Ingredient_Inventory
 from homework import Homework
 from teleporter import Teleporter
+from junction_boxes import Junction_Boxes
 
 CONFIG_FILE = "config.txt"
 
@@ -18,7 +19,8 @@ class Challenges:
             4: ("Paper Problems", self.move_paper_rolls),
             5: ("Spoilers", self.freshen_up_inventory),
             6: ("Tutoring", self.complete_homework),
-            7: ("Teleporter Schematics", self.study_manifolds)
+            7: ("Teleporter Schematics", self.study_manifolds),
+            8: ("Extreme Decorations", self.connect_junction_boxes)
         }
 
     def show_menu(self):
@@ -150,3 +152,9 @@ class Challenges:
         schematics.analyze_manifold()
         schematics.create_beam()
         schematics.letting_beam_drop()
+
+    def connect_junction_boxes(self):
+        print("connect junction boxes with the shortest distance")
+        path = self.get_input_path("day8_path")
+        circuit = Junction_Boxes(path)
+        circuit.analyze_boxes()
