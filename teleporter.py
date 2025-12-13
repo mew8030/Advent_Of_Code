@@ -5,8 +5,9 @@ class Teleporter:
         self.__file_path = file_path
         self.__mani = []
         self.__s = (0,0)
-        self.__beams = set()
-        self.__tmp_beams = set()
+        #self.__beams = set()
+        self.__beams = {}
+        self.__total_beam_count = 0
         self.__splits = 0
         self.__deep = 0
         from logger import Logger
@@ -35,61 +36,81 @@ class Teleporter:
     def get_pos_char(self, pos):
         return self.__mani[pos[0]][pos[1]]
 
+    def add_beam(self, pos, v = 1):
+        if not pos in self.__beams:
+            self.__beams[pos] = v
+        else:
+            self.__beams[pos] += v
+
     def split_beam(self, pos):
-        self.l.log_debug(1, f"spliting beam into {pos[0], pos[1] + 1} and {pos[0], pos[1] - 1}")
-        self.__beams.add((pos[0], pos[1] + 1))
-        self.__beams.add((pos[0], pos[1] - 1))
+        on = False
+        previous = (pos[0] - 1, pos[1])
+        v = self.__beams.get((pos[0] - 1, pos[1]))
+        left = (pos[0], pos[1] - 1)
+        right = (pos[0], pos[1] + 1)
+        self.l.log_debug(on, f"from beam {previous} the value is: {v}")
+        self.l.log_debug(on, f"spliting beam into {right} with {v} and {left} with {v}")
+        self.add_beam(right, v)
+        self.add_beam(left, v)
         
-        self.l.log_debug(1, f"removing previous beam path {pos}")
-        self.__beams.remove((pos[0] - 1, pos[1]))
-        self.l.log_debug(1, f"removal complete")
+        self.l.log_debug(on, f"removing previous beam path {pos}")
+        del self.__beams[previous]
+        self.l.log_debug(on, f"removal complete")
+        self.l.log_debug(on, f"beam splitting complete with left: {left} having {self.__beams.get(left)} and right: {right} having {self.__beams.get(right)}")
         
         self.__splits += 1
 
     def beam_behavior(self, c, pos):
+        on = False
         if not self.__beams:
             if c != '^':
-                self.l.log_debug(1, f"beam needs to be initialized")
-                self.__beams.add(pos)
+                self.l.log_debug(on, f"beam needs to be initialized")
+                if not pos in self.__beams:
+                    self.__beams[pos] = 1
+                else:
+                    self.__beams[pos] += 1
             else:
                 self.split_beam(pos)
         else:
             if c == '^':
-                self.l.log_debug(1, f"beam needs to be split at {pos}")
+                self.l.log_debug(on, f"beam needs to be split at {pos}")
                 self.split_beam(pos)
-                self.l.log_debug(1, f"beam splitting complete")
             else:
-                self.__beams.add(pos)
-                self.__beams.remove((pos[0] - 1, pos[1]))
+                self.add_beam(pos, self.__beams.get((pos[0] - 1, pos[1])))
+                del self.__beams[(pos[0] - 1, pos[1])]
 
     def create_beam(self):
+        on = True
         self.l.log_event(f"dropping beam from {self.__s} (basically initializing beam)")
         pos = self.__s
         if pos[0] < len(self.__mani):
             pos = self.get_next_pos(pos)
-            self.l.log_debug(1, f"getting next position for beam {pos}")
+            self.l.log_debug(on, f"getting next position for beam {pos}")
             c = self.get_pos_char(pos)
             self.beam_behavior(c, pos)
 
     def get_beam_depth(self):
-        self.l.log_debug(1, f"getting depth from {self.__beams}")
+        on = True
+        self.l.log_debug(on, f"getting depth from {self.__beams}")
         for depth, _ in self.__beams:
-            self.l.log_debug(1, f"depth = {depth}")
+            self.l.log_debug(on, f"depth = {depth}")
             return depth
 
     def letting_beam_drop(self):
+        on = True
         self.l.log_event(f"beam free falling from {self.__beams}")
         i = 0
         while self.__deep != len(self.__beams):
-            for beam in self.__beams.copy():
+            for beam, overlap in self.__beams.copy().items():
+                
                 if i > 10000:
                     self.l.log_event(f"too many iterations, stopping program")
                     break
                 i += 1
                 pos = self.get_next_pos(beam)
-                self.l.log_debug(1, f"analyzing beam {beam}")
+                self.l.log_debug(on, f"analyzing beam {beam} with {overlap} overlapping beams")
                 if pos == beam:
-                    self.l.log_debug(1, f"beam {beam} is at the bottom of the manifold")
+                    self.l.log_debug(on, f"beam {beam} is at the bottom of the manifold")
                     self.__deep += 1
                     continue
                 self.l.log_debug(0, f"beam dropping to {pos}")
@@ -99,4 +120,7 @@ class Teleporter:
             if i > 10000:
                 self.l.log_event(f"too many iterations, stopping program")
                 break
-        self.l.log_event(f"beam splits = {self.__splits}\nbeam drop results\n{sorted(self.__beams)}")
+        self.l.log_event(f"beam splits = {self.__splits}\nbeam drop results\n{self.__beams}")
+        for _, beams in self.__beams.items():
+            self.__total_beam_count += beams
+        self.l.log_event(f"total beam count is {self.__total_beam_count}")
