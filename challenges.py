@@ -158,3 +158,4 @@ class Challenges:
         path = self.get_input_path("day8_path")
         circuit = Junction_Boxes(path)
         circuit.analyze_boxes()
+        circuit.connect_circuits()
