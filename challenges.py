@@ -6,6 +6,7 @@ from ingredient_inventory import Ingredient_Inventory
 from homework import Homework
 from teleporter import Teleporter
 from junction_boxes import Junction_Boxes
+from theater import Theater
 
 CONFIG_FILE = "config.txt"
 
@@ -20,7 +21,8 @@ class Challenges:
             5: ("Spoilers", self.freshen_up_inventory),
             6: ("Tutoring", self.complete_homework),
             7: ("Teleporter Schematics", self.study_manifolds),
-            8: ("Extreme Decorations", self.connect_junction_boxes)
+            8: ("Extreme Decorations", self.connect_junction_boxes),
+            9: ("Redocorating Theater", self.redecorate_with_red)
         }
 
     def show_menu(self):
@@ -125,7 +127,7 @@ class Challenges:
             forklift.find_paper_rolls()
         except Exception as e:
             print(f"ERROR: {e}")
-
+    #day 5 challenge
     def freshen_up_inventory(self):
         try:
             print("sorting out the trash")
@@ -136,7 +138,7 @@ class Challenges:
             print(f"out of {food_storage.get_possible_fresh_ids()} possible fresh ids")
         except Exception as e:
             print(f"ERROR: {e}")
-
+    #day 6 challenge
     def complete_homework(self):
         print("completing math homework")
         path = self.get_input_path("day6_path")
@@ -145,6 +147,7 @@ class Challenges:
         math_homework.setup_questions_and_answers()
         print(f"the grand total for the homework is {math_homework.get_grand_total()}")
 
+    #day 7 challenge
     def study_manifolds(self):
         print("study teleporter tychyon manifolds")
         path = self.get_input_path("day7_path")
@@ -153,9 +156,17 @@ class Challenges:
         schematics.create_beam()
         schematics.letting_beam_drop()
 
+    #day 8 challenge
     def connect_junction_boxes(self):
         print("connect junction boxes with the shortest distance")
         path = self.get_input_path("day8_path")
         circuit = Junction_Boxes(path)
         circuit.analyze_boxes()
         circuit.connect_circuits()
+
+    #day 9 challenge
+    def redecorate_with_red(self):
+        print("redecorating theater floor with the largest rectangle")
+        path = self.get_input_path("day9_path")
+        theater_floor = Theater(path)
+        theater_floor.scan_theater_floor()
