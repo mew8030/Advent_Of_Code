@@ -63,13 +63,14 @@ class Junction_Boxes:
                     self.__distances.append((self.get_distance(b1, b2), b1, b2))
         self.l.log_debug(on, f"distance acquisition complete")
         self.__distances = list(sorted(self.__distances))
+        self.l.log_debug(on, f"checking {len(self.__distances)}")
         for dist in self.__distances:
             self.l.log_debug(on, f"{dist}")
 
 
 
     def analyze_boxes(self):
-        on = True
+        on = False
         self.l.log_debug(on, f"reading file {self.__file_path}")
         with open(self.__file_path) as f:
             for line in f:
@@ -88,9 +89,11 @@ class Junction_Boxes:
             if connections > 999:
                 break
             success = self.__jnc.merge_jnc(b1, b2)
-            connections += 1
 
             current_status = "junctions combined" if success else "nothing happens"
+            if current_status == "nothing happens":
+                continue
+            connections += 1
             self.l.log_debug(on, f"connection: {connections} box1: {b1}, box2: {b2}, dist: {dist}, {current_status}")
         self.__jnc.show_sizes()
         self.__jnc.multiply_boxes(3)
