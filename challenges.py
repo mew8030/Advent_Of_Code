@@ -170,3 +170,5 @@ class Challenges:
         path = self.get_input_path("day9_path")
         theater_floor = Theater(path)
         theater_floor.scan_theater_floor()
+        theater_floor.save_largest_area()
+        print(f"the maximum area that can be made is {theater_floor.get_largest_area()}")
