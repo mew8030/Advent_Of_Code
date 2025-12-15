@@ -6,4 +6,4 @@ day5_path=database_official.txt
 day6_path=hw_official.txt
 day7_path=schematics_official.txt
 day8_path=box_position_official.txt
-day9_path=the_floor_official.txt
+day9_path=the_floor.txt
