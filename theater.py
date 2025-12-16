@@ -11,8 +11,8 @@ class Theater:
         self.l = Logger(True)
 
     def scan_theater_floor(self):
-        on = True
-        self.l.log_debug(on, f"scanning the theater floor")
+        on = False
+        self.l.log_debug(True, f"scanning the theater floor")
         with open(self.__file_path) as f:
             for line in f:
                 x, y = map(int, line.strip().split(','))
@@ -24,7 +24,7 @@ class Theater:
 
         self.l.log_debug(on, f"creating valid zone for decoration")
         self.get_border()
-        self.get_interior()
+        #self.get_interior()
         self.get_valid()
 
     def get_area(self, p, q):
@@ -62,8 +62,8 @@ class Theater:
                     self.__interior.add((x,y))
 
     def get_border(self):
-        on = True
-        self.l.log_debug(on, f"getting the perimeter of the shape")
+        on = False
+        self.l.log_debug(True, f"getting the perimeter of the shape")
         n = len(self.__p)
         for i in range(n):
             self.l.log_debug(on, f"creating edge for points {self.__p[i]} and {self.__p[(i+1)%n]}")
@@ -97,30 +97,56 @@ class Theater:
     def is_rectangle_valid(self, p, q):
         on = False
         self.l.log_debug(on, f"checking points p: {p} and q {q} as a rectangle")
-        min_x = min(p[0], q[0])
-        max_x = max(p[0], q[0])
-        min_y = min(p[1], q[1])
-        max_y = max(p[1], q[1])
-        for x in range(min_x, max_x + 1):
-            for y in range(min_y, max_y + 1):
-                if (x, y) not in self.__valid:
-                    self.l.log_debug(on, f"point {(x,y)} is not valid ")
-                    return False
+        corners = [
+            p,
+            q,
+            (p[0], q[1]),
+            (q[0], p[1])
+        ]
+        for corner in corners:
+            if corner not in self.__valid and not self.point_in_polygon(*corner):
+                self.l.log_debug(on, f"point {corner} is not valid ")
+                return False
+        minx = min(p[0], q[0])
+        maxx = max(p[0], q[0])
+        miny = min(p[1], q[1])
+        maxy = max(p[1], q[1])
+        for x in range(minx, maxx + 1):
+            if ((x, miny) not in self.__valid and not self.point_in_polygon(x, miny)) or \
+                ((x, maxy) not in self.__valid and not self.point_in_polygon(x, maxy)):
+                self.l.log_debug(on, f"point {(x, maxy)} or {(x, miny)} is not valid")
+                return False
+        for y in range(miny, maxy + 1):
+            if ((minx, y) not in self.__valid and not self.point_in_polygon(minx, y)) or \
+            ((maxx, y) not in self.__valid and not self.point_in_polygon(maxx, y)):
+                self.l.log_debug(on, f"point {(minx, y)} or {(maxx, y)} is not valid")
+                return False
+
         self.l.log_debug(on, f"p and q checks out.")
         return True
 
     def save_largest_area(self):
         on = True
+        total_pairs = (len(self.__p) * (len(self.__p) - 1)) // 2
+        if total_pairs < 100:
+            total_pairs = 100
+        checked = 0
+        current_max = 0
+        self.l.log_debug(on, f"Total pairs to check is {total_pairs}")
         for i, p in enumerate(self.__p.copy()):
             for j, q in enumerate(self.__p.copy()):
-                if not self.is_rectangle_valid(p, q):
-                    continue
-                if i < j:
+                if j > i:
+                    checked += 1
+                    if checked % (total_pairs//100) == 0:
+                        self.l.log_debug(on, f"Progress: {checked}/{total_pairs} = ({100*checked//total_pairs}%) \nCurrent max: {current_max}")
+                    if not self.is_rectangle_valid(p, q):
+                        continue
                     pxq = self.get_area(p, q)
                     self.l.log_debug(False, f"{pxq} from p {p} and q {q}")
                     if p not in self.__areas:
                         self.__areas[p] = ((pxq, (p,q)))
-                    elif pxq > self.__areas[p][0]:
+                    elif pxq > current_max and pxq > self.__areas[p][0]:
+                        current_max = pxq
                         self.__areas[p] = ((pxq, (p,q)))
                         self.l.log_debug(on, f"p {p} is a contender for self.__areas {self.__areas[p]}")
         self.__areas = dict(sorted(self.__areas.items(), key=lambda area: area[1], reverse=True))
